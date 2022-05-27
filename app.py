@@ -7,6 +7,7 @@ app = Flask(__name__)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    # HTML for uploadind the file
     return render_template('index.html')
 
 
@@ -15,20 +16,20 @@ def flightTable():
     if request.method == 'POST':
         f = request.form['csvFile']
 
-        #try to open the csv file for reading
+        # try to open the csv file for reading
         try:
             file = open(f)
             csvflight = csv.reader(file)
         except IOError:
             return "File not accessible or not csv"
 
-        #remove the header and get all the row to data
+        # remove the header and get all the row to data
         header = next(csvflight)
         data = []
         for r in csvflight:
             data.append(r)
 
-        #get the arrival by order
+        # get the arrival by order
         arrivalsTime = []
         for row in data:
             arrivalsTime.append(row[1])
@@ -37,6 +38,8 @@ def flightTable():
         TheFirsts = 20
         TheFirstsSuc = 0
 
+        # check if row failed or success
+        # first check - if there not a missing data and the date are correct
         for row in data:
             flightNum = row[0]
             correctRow = False
@@ -50,6 +53,8 @@ def flightTable():
             else:
                 row[3] = 'failed'
 
+            # check if row failed or success
+            # second check - check the time and the firsts
             if correctRow:
                 MinDif = (DeparturesTime - arrivalTime).total_seconds() / 60
                 if MinDif > 180 and row[1] in arrivalsTime[:TheFirsts] and TheFirstsSuc < 20:
@@ -62,11 +67,13 @@ def flightTable():
                     TheFirsts += 1
         file.close()
 
+        # write the solution to the file
         with open(f, 'w') as file:
             writer = csv.writer(file)
             for r in data:
                 writer.writerow(r)
 
+        # return the solution to an HTML page
         return render_template('flights.html', data=data)
 
 
